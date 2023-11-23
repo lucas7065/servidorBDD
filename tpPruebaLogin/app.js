@@ -7,7 +7,6 @@ const PORT = 3000;
 
 const cors = require('cors');
 
-// Habilitar CORS para todas las rutas
 app.use(cors());
 
 
@@ -21,7 +20,7 @@ let conexion = mysql.createConnection({
     host: 'localhost',
     database: 'tpfinal',
     user: 'root',
-    password: 'admin'
+    password: 'password'
 });
 
 app.set('view engine', 'ejs');
@@ -40,13 +39,13 @@ app.get('/login', function(req,res){
 
 app.post("/validar", function(req, res){
     const datos = req.body;
-
     let nombre = datos.nombre;
     let apellido = datos.apellido;
     let email = datos.email;
     let contraseña = datos.password;
-
+    
     let buscar = "SELECT * FROM usuarios WHERE email = '" + email + "'";
+    
     conexion.query(buscar, function(err, row){
         if(err){
             console.error(err);
@@ -72,51 +71,29 @@ app.post("/validar", function(req, res){
     });
 });
 
-/*
-app.post("/login", function(req, res){
-    const datos = req.body;
 
-    let email = datos.email;
-    let contraseña = datos.password;
-
-    let buscar = "SELECT * FROM usuarios WHERE email = '" + email + "' AND password = '" + contraseña + "' ";
-
-    conexion.query(buscar, function(err, rows){
-        if(err){
-            console.log(err)
-            return res.status(500).send("Error en el servidor");
-        }else{
-            if(rows.length>0){
-                console.log("Inicio de sesion exitoso");
-                return res.status(200).json({message: 'Inicio de sesion exitoso'});
-            }else{
-                console.log("Credenciales incorrectas");
-                return res.status(401).json({error: 'Credenciales incorrectas'});
-            }
-        }
-    })
-})
-*/
 app.post('/api/login', (req, res) => {
-    const { email, password } = req.body;
-  
+    const datos = req.body;
+    let email = datos.email;
+    let password = datos.password;
+    console.log("body == "+email);
+    console.log("body == "+password);
+
     const query = `SELECT * FROM usuarios WHERE email = ? AND password = ?`;
   
     conexion.query(query, [email, password], (err, results) => {
       if (err) {
         console.error(err);
-        res.status(500).json({ message: 'Error en el servidor' });
-        return;
+        return res.status(500).json({ message: 'Error en el servidor' });
       }
   
       const user = results[0];
-  
-      if (user) {
-        const token = jwt.sign({ idUsuario: user.idUsuario }, '123', { expiresIn: '1h' });
-  
-        res.json({ token, userDetails: { idUsuario: user.idUsuario, nombre: user.nombre, apellido: user.apellido } });
+
+      if (user.password == password) {
+        console.log("Logeo exitoso");
+        return res.status(200).json(user);
       } else {
-        res.status(401).json({ message: 'Credenciales inválidas' });
+        return res.status(401).json({ message: 'Credenciales inválidas' });
       }
     });
   });
