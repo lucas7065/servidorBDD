@@ -76,8 +76,7 @@ app.post('/api/login', (req, res) => {
     const datos = req.body;
     let email = datos.email;
     let password = datos.password;
-    console.log("body == "+email);
-    console.log("body == "+password);
+
 
     const query = `SELECT * FROM usuarios WHERE email = ? AND password = ?`;
 
@@ -134,3 +133,43 @@ app.post('/api/login', (req, res) => {
       throw error;
     }
   }
+
+
+  app.post('/api/insertar-juego-favorito', (req, res) => {
+    const datos = req.body;
+    const idUsuario = datos.idUsuario;
+    const idJuego = datos.idJuego;
+  
+    let query = "INSERT INTO favoritosXusuario (idUsuario, idJuego) VALUES ('" + idUsuario + "', '" + idJuego + "')";
+    conexion.query(query, function(error){
+      if(error){
+        console.log(err);
+        return res.status(500).send('Error en el servidor');
+      }
+
+      console.log('Juego agregado a favoritos correctamente.')
+      return res.status(200).json({ message: 'Datos almacenados correctamente' });
+    });
+  });
+
+
+// Nueva ruta para obtener los juegos favoritos del usuario
+app.get('/api/juegos-favoritos', (req, res) => {
+  const idUsuario = req.query.idUsuario; // Obtén el idUsuario de los parámetros de la consulta
+
+  if (!idUsuario) {
+    return res.status(400).json({ error: 'Falta el parámetro idUsuario en la consulta.' });
+  }
+
+  // Consulta para obtener los IDs de juegos favoritos del usuario
+  const query = 'SELECT idJuego FROM favoritosXusuario WHERE idUsuario = ?';
+  conexion.query(query, [idUsuario], (error, results) => {
+    if (error) {
+      console.error('Error al obtener juegos favoritos:', error);
+      res.status(500).send('Error interno del servidor');
+    } else {
+      const juegosFavoritos = results.map(result => result.idJuego);
+      res.status(200).json({ juegosFavoritos });
+    }
+  });
+});
