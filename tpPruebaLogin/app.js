@@ -20,7 +20,7 @@ let conexion = mysql.createConnection({
     host: 'localhost',
     database: 'tpfinal',
     user: 'root',
-    password: 'password'
+    password: 'admin'
 });
 
 app.set('view engine', 'ejs');
@@ -80,7 +80,7 @@ app.post('/api/login', (req, res) => {
     console.log("body == "+password);
 
     const query = `SELECT * FROM usuarios WHERE email = ? AND password = ?`;
-  
+
     conexion.query(query, [email, password], (err, results) => {
       if (err) {
         console.error(err);
@@ -89,12 +89,48 @@ app.post('/api/login', (req, res) => {
   
       const user = results[0];
 
-      if (user.password == password) {
+    if (user && user.password == password) {
         console.log("Logeo exitoso");
         return res.status(200).json(user);
-      } else {
+    } else {
         return res.status(401).json({ message: 'Credenciales inválidas' });
-      }
+    }   
     });
   });
+
+
+  app.get('/api/userinfo', async (req, res) => {
+    try {
+      // Recuperar la información del usuario desde la base de datos
+      const userInfo = await obtenerInformacionUsuarioDesdeBaseDeDatos(req.params.idUsuario);
   
+      // Enviar la información del usuario al cliente
+      res.json(userInfo);
+    } catch (error) {
+      console.error('Error al obtener información del usuario desde la base de datos', error);
+      res.status(500).json({ error: 'Error interno del servidor' });
+    }
+  });
+  
+  // Función para obtener información del usuario desde la base de datos
+  async function obtenerInformacionUsuarioDesdeBaseDeDatos(idUsuario) {
+    try {
+      let query = 'SELECT * FROM usuarios WHERE idUsuario = ?';
+
+      const result = await conexion.query(query, [idUsuario]);
+      const rows = result[0];
+      const fields = result[1];
+
+      
+      // Si se encontraron resultados, devolver el primer resultado
+      if (rows.length > 0) {
+        return rows[0];
+      } else {
+        // Si no se encuentra ningún usuario, puedes devolver null o algún otro valor predeterminado
+        return null;
+      }
+    } catch (error) {
+      console.error('Error al ejecutar la consulta SQL', error);
+      throw error;
+    }
+  }
