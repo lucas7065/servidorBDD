@@ -77,7 +77,6 @@ app.post('/api/login', (req, res) => {
     let email = datos.email;
     let password = datos.password;
 
-
     const query = `SELECT * FROM usuarios WHERE email = ? AND password = ?`;
 
     conexion.query(query, [email, password], (err, results) => {
@@ -97,6 +96,7 @@ app.post('/api/login', (req, res) => {
     });
   });
 
+  /*
 
   app.get('/api/userinfo', async (req, res) => {
     try {
@@ -114,9 +114,9 @@ app.post('/api/login', (req, res) => {
   // Función para obtener información del usuario desde la base de datos
   async function obtenerInformacionUsuarioDesdeBaseDeDatos(idUsuario) {
     try {
-      let query = 'SELECT * FROM usuarios WHERE idUsuario = ?';
+      let query = 'SELECT * FROM usuarios WHERE idUsuario = idUsuario';
 
-      const result = await conexion.query(query, [idUsuario]);
+      const result = await conexion.query(query, {idUsuario});
       const rows = result[0];
       const fields = result[1];
 
@@ -134,7 +134,7 @@ app.post('/api/login', (req, res) => {
     }
   }
 
-
+*/
   app.post('/api/insertar-juego-favorito', (req, res) => {
     const datos = req.body;
     const idUsuario = datos.idUsuario;
@@ -153,6 +153,27 @@ app.post('/api/login', (req, res) => {
   });
 
 
+
+
+
+  app.post('/api/eliminar-juego-favorito', (req, res) => {
+    const datos = req.body;
+    const idUsuario = datos.idUsuario;
+    const idJuego = datos.idJuego;
+  
+    
+    let query = `DELETE FROM favoritosXusuario WHERE idUsuario = ${idUsuario} AND idJuego = ${idJuego};`;
+    conexion.query(query, function(error){
+      if(error){
+        console.log(error);
+        return res.status(500).send('Error en el servidor');
+      }
+
+      console.log('Juego eliminado de favoritos correctamente.')
+      return res.status(200).json({ message: 'Juego eliminado de favoritos correctamente'});
+    });
+  });
+/*
 // Nueva ruta para obtener los juegos favoritos del usuario
 app.get('/api/juegos-favoritos', (req, res) => {
   const idUsuario = req.query.idUsuario; // Obtén el idUsuario de los parámetros de la consulta
@@ -173,3 +194,67 @@ app.get('/api/juegos-favoritos', (req, res) => {
     }
   });
 });
+*/
+
+
+
+
+
+app.get('/api/juegos-favoritos', async (req, res) => {
+  const idUsuario = req.query.idUsuario; // Obtén el idUsuario de los parámetros de la consulta
+
+  try {
+
+    const query = 'SELECT idJuego FROM favoritosXusuario WHERE idUsuario = ?';
+
+    conexion.query(query, idUsuario, (err, results)=>{
+      if(results){
+        return res.status(200).json(results);
+      }
+    });
+  }catch (error) {
+    console.error('Error al obtener juegos favoritos:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+}
+);
+
+
+app.get('/api/info-usuario', async(req, res)=>{
+  const idUsuario = req.query.idUsuario;
+  try{
+    const query = 'SELECT * FROM usuarios WHERE idUsuario = ?';
+    conexion.query(query, idUsuario, (err, results)=>{
+      if(results){
+        console.log(idUsuario);
+        console.log(query);
+        return res.status(200).json(results);
+      }
+    });
+  }catch (error) {
+    console.error('Error al obtener informacion del usuario:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+});
+
+
+
+
+
+/*
+    const [rows] = await conexion.query('SELECT idJuego FROM favoritosXusuario WHERE idUsuario = ?', [idUsuario]);
+
+    // Verificar si hay alguna fila en rows
+    if (rows && rows.length > 0) {
+      // Extraer los IDs de los juegos favoritos y enviarlos como respuesta
+      const juegosFavoritos = rows.map(row => row.idJuego);
+      res.json({ juegosFavoritos });
+    } else {
+      // No se encontraron juegos favoritos para el usuario
+      res.json({ juegosFavoritos: [] });
+    }
+  } catch (error) {
+    console.error('Error al obtener juegos favoritos:', error);
+    res.status(500).json({ error: 'Error interno del servidor' });
+  }
+  */
